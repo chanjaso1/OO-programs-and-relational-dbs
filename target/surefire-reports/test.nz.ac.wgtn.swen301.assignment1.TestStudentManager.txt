@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: test.nz.ac.wgtn.swen301.assignment1.TestStudentManager
+-------------------------------------------------------------------------------
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.178 sec

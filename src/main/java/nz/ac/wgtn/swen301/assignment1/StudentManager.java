@@ -3,6 +3,7 @@ package nz.ac.wgtn.swen301.assignment1;
 import nz.ac.wgtn.swen301.studentdb.*;
 import java.sql.*;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * A student managers providing basic CRUD operations for instances of Student, and a read operation for instances of Degree.
@@ -10,10 +11,22 @@ import java.util.Collection;
  */
 public class StudentManager {
 
+    static Statement statement = null;
+    static Connection  connection = null;
+
+
     // DO NOT REMOVE THE FOLLOWING -- THIS WILL ENSURE THAT THE DATABASE IS AVAILABLE
     // AND THE APPLICATION CAN CONNECT TO IT WITH JDBC
     static {
+
         StudentDB.init();
+        try {
+            connection = DriverManager.getConnection("jdbc:derby:memory:studentdb");
+            statement  = connection.createStatement();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
     // DO NOT REMOVE BLOCK ENDS HERE
 
@@ -27,8 +40,23 @@ public class StudentManager {
      * @throws NoSuchRecordException if no record with such an id exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_readStudent (followed by optional numbers if multiple tests are used)
      */
-    public static Student readStudent(String id) throws NoSuchRecordException {
-        return null;
+    public static Student readStudent(String id) throws NoSuchRecordException, SQLException {
+        ResultSet rs = statement.executeQuery("SELECT * FROM STUDENTS WHERE ID = '" + id + "'");  //Search for all IDs for THIS id
+
+        while(rs.next()){
+            String studentId = rs.getString("id");
+            String name = rs.getString("name");
+            String firstName = rs.getString("first_name");
+            String degree = rs.getString("degree");
+
+            rs.close();
+            return new Student(studentId, name, firstName, readDegree(degree));
+        }
+
+        rs.close();
+        throw new NoSuchRecordException("No such record of student");
+
+
     }
 
     /**
@@ -39,8 +67,18 @@ public class StudentManager {
      * @throws NoSuchRecordException if no record with such an id exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_readDegree (followed by optional numbers if multiple tests are used)
      */
-    public static Degree readDegree(String id) throws NoSuchRecordException {
-        return null;
+    public static Degree readDegree(String id) throws NoSuchRecordException, SQLException {
+        ResultSet rs = statement.executeQuery("SELECT * FROM DEGREES WHERE ID = '" + id + "'"); //Search for all IDs for THIS id
+        while(rs.next()){
+            String name = rs.getString("name");
+            String degreeID = rs.getString("id");
+
+            rs.close();
+            return new Degree(degreeID, name);
+        }
+
+        rs.close();
+        throw new NoSuchRecordException("No such record of degree");
     }
 
     /**
@@ -50,19 +88,32 @@ public class StudentManager {
      * @throws NoSuchRecordException if no record corresponding to this student instance exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_delete
      */
-    public static void delete(Student student) throws NoSuchRecordException {}
+    public static void delete(Student student) throws Exception {
+        if(statement.executeUpdate("DELETE FROM STUDENTS WHERE ID = '" + student.getId() + "'") != 1){ //Check that only 1 row is deleted as IDs are unique.
+            throw new NoSuchRecordException("No such record of student.");
+        }
+    }
 
     /**
      * Update (synchronize) a student instance with the database.
      * The id will not be changed, but the values for first names or degree in the database might be changed by this operation.
      * After executing this command, the attribute values of the object and the respective database value are consistent.
-     * Note that names and first names can only be max 1o characters long.
+     * Note that names and first names can only be max 10 characters long.
      * There is no special handling required to enforce this, just ensure that tests only use values with < 10 characters.
      * @param student
      * @throws NoSuchRecordException if no record corresponding to this student instance exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_update (followed by optional numbers if multiple tests are used)
      */
-    public static void update(Student student) throws NoSuchRecordException {}
+    public static void update(Student student) throws SQLException {
+        String sql = "UPDATE STUDENTS SET NAME = '" + student.getName() +
+                "', FIRST_NAME =  '" + student.getFirstName() +
+                "', DEGREE = '" + student.getDegree().getId() + "'" +
+                "WHERE ID = '" + student.getId() + "'";
+
+        statement.executeUpdate(sql); //update studentDB with this student information
+
+
+    }
 
 
     /**
@@ -94,9 +145,7 @@ public class StudentManager {
      * @return
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_getAllDegreeIds (followed by optional numbers if multiple tests are used)
      */
-    public static Iterable<String> getAllDegreeIds() {
-        return null;
-    }
+    public static Iterable<String> getAllDegreeIds() { return null; }
 
 
 }
