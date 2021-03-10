@@ -9,6 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -146,6 +148,79 @@ public class TestStudentManager {
         }catch(SQLException e){
             //if caught, then this test passes
         }
+    }
+
+
+    /**
+     * Create two unique students.
+     * @throws Exception if these students were not found in the database.
+     */
+    @Test
+    public void test_createStudent() throws Exception {
+        StudentManager studentManager = new StudentManager();
+
+        Student student = studentManager.createStudent("Jake", "Bobber", studentManager.readDegree("deg9"));
+        studentManager.readStudent(student.getId());
+
+        student = studentManager.createStudent("boober", "Shobber", studentManager.readDegree("deg2"));
+        studentManager.readStudent(student.getId());
+
+    }
+
+    /**
+     * Check that the list of student ids are not empty.
+     * @throws Exception if it is empty.
+     */
+    @Test
+    public void test_getAllStudentIds() throws Exception{
+        StudentManager studentManager = new StudentManager();
+        Collection<String> ids = studentManager.getAllStudentIds();
+        if(ids.isEmpty()) throw new Exception("Student IDs should not be empty");
+
+    }
+
+    /**
+     * Check that all student ids follow the same string format.
+     * @throws Exception if any id does not follow the format.
+     */
+    @Test
+    public void test_getAllStudentIds2() throws Exception{
+        StudentManager studentManager = new StudentManager();
+        Collection<String> ids = studentManager.getAllStudentIds();
+        for(String id : ids) {
+            if(!(id.substring(0,2).equals("id") && id.length() > 2)){
+                throw new Exception("Some id/s were not formatted properly");
+            }
+        }
+
+    }
+
+    /**
+     * Check that the list of degree ids are not empty.
+     * @throws Exception if it is empty.
+     */
+    @Test
+    public void test_getAllDegreeIds() throws Exception{
+        StudentManager studentManager = new StudentManager();
+        Collection<String> ids = (Collection<String>) studentManager.getAllDegreeIds();
+        if(ids.isEmpty()) throw new Exception("Degree IDs should not be empty");
+
+    }
+
+    /**
+     * Check that all degree ids follow the same string format.
+     * @throws Exception if any id does not follow the format.
+     */
+    @Test
+    public void test_getAllDegreeIds2() throws Exception{
+        StudentManager studentManager = new StudentManager();
+        Collection<String> ids = (Collection<String>) studentManager.getAllDegreeIds();
+        for(String id : ids) {
+            if(!(id.substring(0,3).equals("deg") && id.length() > 3)){
+                throw new Exception("Some id/s were not formatted properly");
+            }
+        }
+
     }
 
 

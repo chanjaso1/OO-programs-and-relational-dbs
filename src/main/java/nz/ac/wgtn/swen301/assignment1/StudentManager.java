@@ -3,6 +3,7 @@ package nz.ac.wgtn.swen301.assignment1;
 import nz.ac.wgtn.swen301.studentdb.*;
 import java.sql.*;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 
 /**
@@ -35,8 +36,8 @@ public class StudentManager {
     /**
      * Return a student instance with values from the row with the respective id in the database.
      * If an instance with this id already exists, return the existing instance and do not create a second one.
-     * @param id
-     * @return
+     * @param id -- The id of the student.
+     * @return the student.
      * @throws NoSuchRecordException if no record with such an id exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_readStudent (followed by optional numbers if multiple tests are used)
      */
@@ -62,8 +63,8 @@ public class StudentManager {
     /**
      * Return a degree instance with values from the row with the respective id in the database.
      * If an instance with this id already exists, return the existing instance and do not create a second one.
-     * @param id
-     * @return
+     * @param id -- The id of the degree.
+     * @return the degree.
      * @throws NoSuchRecordException if no record with such an id exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_readDegree (followed by optional numbers if multiple tests are used)
      */
@@ -84,7 +85,7 @@ public class StudentManager {
     /**
      * Delete a student instance from the database.
      * I.e., after this, trying to read a student with this id will result in a NoSuchRecordException.
-     * @param student
+     * @param student -- The student to be deleted.
      * @throws NoSuchRecordException if no record corresponding to this student instance exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_delete
      */
@@ -100,7 +101,7 @@ public class StudentManager {
      * After executing this command, the attribute values of the object and the respective database value are consistent.
      * Note that names and first names can only be max 10 characters long.
      * There is no special handling required to enforce this, just ensure that tests only use values with < 10 characters.
-     * @param student
+     * @param student   -- The new student information.
      * @throws NoSuchRecordException if no record corresponding to this student instance exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_update (followed by optional numbers if multiple tests are used)
      */
@@ -112,7 +113,6 @@ public class StudentManager {
 
         statement.executeUpdate(sql); //update studentDB with this student information
 
-
     }
 
 
@@ -121,31 +121,67 @@ public class StudentManager {
      * The student must have a new id that is not been used by any other Student instance or STUDENTS record (row).
      * Note that names and first names can only be max 1o characters long.
      * There is no special handling required to enforce this, just ensure that tests only use values with < 10 characters.
-     * @param name
-     * @param firstName
-     * @param degree
+     * @param name          -- The name of the student.
+     * @param firstName     -- The first name of the student.
+     * @param degree        -- The degree the student is taking.
      * @return a freshly created student instance
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_createStudent (followed by optional numbers if multiple tests are used)
      */
-    public static Student createStudent(String name,String firstName,Degree degree) {
-        return null;
-    }
+    public static Student createStudent(String name,String firstName,Degree degree) throws Exception {
+        Statement currentStatement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+
+        ResultSet rs = currentStatement.executeQuery("SELECT * FROM STUDENTS");
+
+        rs.last();
+        String newId = "id" + (rs.getRow() + 1);    //Get a new ID for a student.
+        rs.moveToInsertRow();
+        rs.updateString("ID",  newId);
+        rs.updateString("name", name);
+        rs.updateString("first_name", firstName);
+        rs.updateString("degree", degree.getId());
+        rs.insertRow();                             //Add a new student.
+
+        return readStudent(newId);                  //Return the new student from the database.
+
+}
 
     /**
      * Get all student ids currently being used in the database.
-     * @return
+     * @return the collection of student ids.
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_getAllStudentIds (followed by optional numbers if multiple tests are used)
      */
-    public static Collection<String> getAllStudentIds() {
-        return null;
+    public static Collection<String> getAllStudentIds() throws SQLException, NoSuchRecordException {
+        Collection<String> ids = new HashSet<>();
+
+        ResultSet  rs = statement.executeQuery("SELECT ID FROM STUDENTS"); //Find all student ids.
+        while(rs.next()){
+            ids.add(rs.getString("ID"));
+        }
+        rs.close();
+
+        if(ids.isEmpty()) {
+            throw new NoSuchRecordException();
+        }
+        return ids;
     }
 
     /**
      * Get all degree ids currently being used in the database.
-     * @return
+     * @return a collection of degree ids.
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_getAllDegreeIds (followed by optional numbers if multiple tests are used)
      */
-    public static Iterable<String> getAllDegreeIds() { return null; }
+    public static Iterable<String> getAllDegreeIds() throws SQLException, NoSuchRecordException {
+        Collection<String> ids = new HashSet<>();
 
+        ResultSet  rs = statement.executeQuery("SELECT ID FROM DEGREES"); //Find all degree ids.
+        while(rs.next()){
+            ids.add(rs.getString("ID"));
+        }
+        rs.close();
 
+        if(ids.isEmpty()) {
+            throw new NoSuchRecordException();
+        }
+        return ids;
+    }
 }
