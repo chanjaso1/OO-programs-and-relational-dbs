@@ -3,6 +3,7 @@ package nz.ac.wgtn.swen301.assignment1;
 import nz.ac.wgtn.swen301.studentdb.*;
 import java.sql.*;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -14,7 +15,7 @@ public class StudentManager {
 
     static Statement statement = null;
     static Connection  connection = null;
-
+     int maxID = 0;
 
     // DO NOT REMOVE THE FOLLOWING -- THIS WILL ENSURE THAT THE DATABASE IS AVAILABLE
     // AND THE APPLICATION CAN CONNECT TO IT WITH JDBC
@@ -30,6 +31,7 @@ public class StudentManager {
 
     }
     // DO NOT REMOVE BLOCK ENDS HERE
+
 
     // THE FOLLOWING METHODS MUST IMPLEMENTED :
 
@@ -128,19 +130,25 @@ public class StudentManager {
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_createStudent (followed by optional numbers if multiple tests are used)
      */
     public static Student createStudent(String name,String firstName,Degree degree) throws Exception {
+
         Statement currentStatement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 
-        ResultSet rs = currentStatement.executeQuery("SELECT * FROM STUDENTS");
+        int max = 0;
+        for(String id : getAllStudentIds()){        //Find the max id in the list of students.
+            int currentId = Integer.parseInt(id.substring(2));
+            if(currentId > max) max = currentId;
+        }
+        String newId = "id" + (++max);
 
-        rs.last();
-        String newId = "id" + (rs.getRow() + 1);    //Get a new ID for a student.
+        ResultSet rs = currentStatement.executeQuery("SELECT * FROM STUDENTS");
         rs.moveToInsertRow();
-        rs.updateString("ID",  newId);
+        rs.updateString("ID",  newId);          
         rs.updateString("name", name);
         rs.updateString("first_name", firstName);
         rs.updateString("degree", degree.getId());
         rs.insertRow();                             //Add a new student.
 
+        rs.close();
         return readStudent(newId);                  //Return the new student from the database.
 
 }

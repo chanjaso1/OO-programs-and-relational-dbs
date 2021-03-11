@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 public class TestStudentManager {
@@ -166,6 +167,27 @@ public class TestStudentManager {
         studentManager.readStudent(student.getId());
 
     }
+
+    /**
+     * Create two unique students and then delete to see if the id is still unique.
+     * @throws Exception if the ids were not unique.
+     */
+    @Test
+    public void test_createStudent2() throws Exception {
+        StudentManager studentManager = new StudentManager();
+
+        Student student = studentManager.createStudent("Jake", "Bobber", studentManager.readDegree("deg9"));
+        assertTrue(student.getId().equals("id10000"));
+        studentManager.readStudent(student.getId());
+
+        studentManager.delete(student);
+
+        student = studentManager.createStudent("boober", "Shobber", studentManager.readDegree("deg2"));
+        studentManager.readStudent(student.getId());
+        assertTrue(student.getId().equals("id10000"));
+    }
+
+
 
     /**
      * Check that the list of student ids are not empty.
