@@ -1,11 +1,13 @@
 package nz.ac.wgtn.swen301.assignment1;
 
-import nz.ac.wgtn.swen301.studentdb.*;
+import nz.ac.wgtn.swen301.studentdb.Degree;
+import nz.ac.wgtn.swen301.studentdb.NoSuchRecordException;
+import nz.ac.wgtn.swen301.studentdb.Student;
+import nz.ac.wgtn.swen301.studentdb.StudentDB;
+
 import java.sql.*;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 
 /**
  * A student managers providing basic CRUD operations for instances of Student, and a read operation for instances of Degree.
@@ -13,7 +15,8 @@ import java.util.Iterator;
  */
 public class StudentManager {
 
-    static Statement statement = null;
+    static Statement statement = null;  //for executing commands
+    static PreparedStatement statementRead = null; //for reading students
     static Connection  connection = null;
      int maxID = 0;
 
@@ -25,6 +28,7 @@ public class StudentManager {
         try {
             connection = DriverManager.getConnection("jdbc:derby:memory:studentdb");
             statement  = connection.createStatement();
+            statementRead = connection.prepareStatement("SELECT * FROM STUDENTS WHERE ID = ?");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -44,7 +48,8 @@ public class StudentManager {
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_readStudent (followed by optional numbers if multiple tests are used)
      */
     public static Student readStudent(String id) throws NoSuchRecordException, SQLException {
-        ResultSet rs = statement.executeQuery("SELECT * FROM STUDENTS WHERE ID = '" + id + "'");  //Search for all IDs for THIS id
+        statementRead.setString(1, id);             //Search for all IDS for THIS id
+        ResultSet rs = statementRead.executeQuery();
 
         while(rs.next()){
             String studentId = rs.getString("id");
@@ -58,7 +63,6 @@ public class StudentManager {
 
         rs.close();
         throw new NoSuchRecordException("No such record of student");
-
 
     }
 

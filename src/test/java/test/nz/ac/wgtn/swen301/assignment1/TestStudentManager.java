@@ -242,8 +242,26 @@ public class TestStudentManager {
                 throw new Exception("Some id/s were not formatted properly");
             }
         }
+    }
+
+    /**
+     *
+     */
+    @Test
+    public void testPerformance() throws Exception{
+        StudentManager studentManager = new StudentManager();
+        long time = System.currentTimeMillis();
+        for (int i = 0; i < 1000; i++){
+            studentManager.readStudent("id" + i);
+        }
+        long dur = System.currentTimeMillis() - time;
+
+        System.out.println(dur);
+        if(dur > 1000) throw new Exception();
+
 
     }
+
 
 
 }
