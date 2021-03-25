@@ -12,8 +12,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 
 public class TestStudentManager {
@@ -177,14 +176,14 @@ public class TestStudentManager {
         StudentManager studentManager = new StudentManager();
 
         Student student = studentManager.createStudent("Jake", "Bobber", studentManager.readDegree("deg9"));
-        assertTrue(student.getId().equals("id10000"));
+        assertEquals("id10000", student.getId());
         studentManager.readStudent(student.getId());
 
         studentManager.delete(student);
 
         student = studentManager.createStudent("boober", "Shobber", studentManager.readDegree("deg2"));
         studentManager.readStudent(student.getId());
-        assertTrue(student.getId().equals("id10000"));
+        assertEquals("id10000", student.getId());
     }
 
 
@@ -245,23 +244,68 @@ public class TestStudentManager {
     }
 
     /**
-     *
+     * Test the performance of reading students 1000 times.
+     * @throws Exception if it takes more than one second.
      */
     @Test
-    public void testPerformance() throws Exception{
+    public void test_Performance() throws Exception{
         StudentManager studentManager = new StudentManager();
         long time = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++){
-            studentManager.readStudent("id" + i);
+            studentManager.readStudent("id" + (int)(i*Math.random()) );
         }
         long dur = System.currentTimeMillis() - time;
 
         System.out.println(dur);
         if(dur > 1000) throw new Exception();
+    }
 
+    /**
+     * Test that cache is updated when a student is created.
+     */
+    @Test
+    public void test_cache1() throws Exception {
+        StudentManager studentManager = new StudentManager();
+        Student newStudent = studentManager.readStudent("id32");
+        assertTrue(studentManager.cache.containsKey(newStudent.getId()));
+    }
+
+    /**
+     * Test that cache is updated when a student is deleted.
+     */
+    @Test
+    public void test_cache2() throws Exception {
+        StudentManager studentManager = new StudentManager();
+        Student student = studentManager.readStudent("id23");
+        studentManager.delete(student);
+        assert(!(studentManager.cache.containsKey(student.getId())));
+    }
+
+    /**
+     * Check that when a student has been updated, the cache should also update as well.
+     * @throws Exception when the cache is not up to date.
+     */
+    @Test
+    public void test_cache3() throws Exception {
+        StudentManager studentManager = new StudentManager();
+        Student student = studentManager.readStudent("id48");
+        student.setName("UniqueName");
+        studentManager.update(student);
+        assertEquals(studentManager.cache.get(student.getId()).getName(), "UniqueName");
 
     }
 
-
-
+    /**
+     * Check that the cache can be cleaned.
+     * @throws Exception if the cache was not cleaned.
+     */
+    @Test
+    public void test_clean() throws Exception {
+        StudentManager studentManager = new StudentManager();
+        for (int i = 0; i < 75; i++) {
+            studentManager.createStudent("Chi", "M", studentManager.readDegree("deg9"));
+        }
+        studentManager.cache.clear();
+        assertTrue(studentManager.cache.isEmpty());
+    }
 }

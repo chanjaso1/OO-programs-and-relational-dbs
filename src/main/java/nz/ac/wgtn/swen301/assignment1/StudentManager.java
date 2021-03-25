@@ -7,6 +7,7 @@ import nz.ac.wgtn.swen301.studentdb.StudentDB;
 
 import java.sql.*;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -18,7 +19,7 @@ public class StudentManager {
     static Statement statement = null;  //for executing commands
     static PreparedStatement statementRead = null; //for reading students
     static Connection  connection = null;
-     int maxID = 0;
+    public static HashMap<String, Student> cache  = new HashMap<>(); //The cache to hold students.
 
     // DO NOT REMOVE THE FOLLOWING -- THIS WILL ENSURE THAT THE DATABASE IS AVAILABLE
     // AND THE APPLICATION CAN CONNECT TO IT WITH JDBC
@@ -29,6 +30,7 @@ public class StudentManager {
             connection = DriverManager.getConnection("jdbc:derby:memory:studentdb");
             statement  = connection.createStatement();
             statementRead = connection.prepareStatement("SELECT * FROM STUDENTS WHERE ID = ?");
+            cache.clear();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -48,7 +50,9 @@ public class StudentManager {
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_readStudent (followed by optional numbers if multiple tests are used)
      */
     public static Student readStudent(String id) throws NoSuchRecordException, SQLException {
-        statementRead.setString(1, id);             //Search for all IDS for THIS id
+        if(cache.containsKey(id)) return cache.get(id);
+
+        statementRead.setString(1, id);             //Search all IDS for THIS id
         ResultSet rs = statementRead.executeQuery();
 
         while(rs.next()){
@@ -57,8 +61,13 @@ public class StudentManager {
             String firstName = rs.getString("first_name");
             String degree = rs.getString("degree");
 
+
+            Student student = new Student(studentId, name, firstName, readDegree(degree));
+
             rs.close();
-            return new Student(studentId, name, firstName, readDegree(degree));
+
+            cache.put(studentId, student);
+            return student;
         }
 
         rs.close();
@@ -75,7 +84,7 @@ public class StudentManager {
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_readDegree (followed by optional numbers if multiple tests are used)
      */
     public static Degree readDegree(String id) throws NoSuchRecordException, SQLException {
-        ResultSet rs = statement.executeQuery("SELECT * FROM DEGREES WHERE ID = '" + id + "'"); //Search for all IDs for THIS id
+        ResultSet rs = statement.executeQuery("SELECT * FROM DEGREES WHERE ID = '" + id + "'"); //Search all IDs for THIS id
         while(rs.next()){
             String name = rs.getString("name");
             String degreeID = rs.getString("id");
@@ -95,7 +104,8 @@ public class StudentManager {
      * @throws NoSuchRecordException if no record corresponding to this student instance exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_delete
      */
-    public static void delete(Student student) throws Exception {
+    public static void delete(Student student) throws NoSuchRecordException, SQLException {
+        cache.remove(student.getId());
         if(statement.executeUpdate("DELETE FROM STUDENTS WHERE ID = '" + student.getId() + "'") != 1){ //Check that only 1 row is deleted as IDs are unique.
             throw new NoSuchRecordException("No such record of student.");
         }
@@ -111,14 +121,17 @@ public class StudentManager {
      * @throws NoSuchRecordException if no record corresponding to this student instance exists in the database
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_update (followed by optional numbers if multiple tests are used)
      */
-    public static void update(Student student) throws SQLException {
-        String sql = "UPDATE STUDENTS SET NAME = '" + student.getName() +
+    public static void update(Student student) throws SQLException, NoSuchRecordException {
+        readStudent(student.getId());   //check that this student exists
+
+        String sql = "UPDATE STUDENTS SET NAME = '" + student.getName() +       //update the student
                 "', FIRST_NAME =  '" + student.getFirstName() +
                 "', DEGREE = '" + student.getDegree().getId() + "'" +
                 "WHERE ID = '" + student.getId() + "'";
 
-        statement.executeUpdate(sql); //update studentDB with this student information
 
+        statement.executeUpdate(sql); //update studentDB with this student information
+        cache.put(student.getId(), student);    //update the hashmap
     }
 
 
@@ -133,7 +146,7 @@ public class StudentManager {
      * @return a freshly created student instance
      * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_createStudent (followed by optional numbers if multiple tests are used)
      */
-    public static Student createStudent(String name,String firstName,Degree degree) throws Exception {
+    public static Student createStudent(String name,String firstName,Degree degree) throws SQLException, NoSuchRecordException {
 
         Statement currentStatement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 
@@ -153,7 +166,10 @@ public class StudentManager {
         rs.insertRow();                             //Add a new student.
 
         rs.close();
-        return readStudent(newId);                  //Return the new student from the database.
+
+        Student newStudent = readStudent(newId);
+        cache.put(newStudent.getId(), newStudent);
+        return newStudent;                  //Return the new student from the database.
 
 }
 
@@ -196,4 +212,5 @@ public class StudentManager {
         }
         return ids;
     }
+
 }

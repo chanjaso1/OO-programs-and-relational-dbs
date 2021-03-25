@@ -2,7 +2,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>nz.ac.vuw.swen301</groupId>
-  <artifactId>assignment1</artifactId>
+  <artifactId>studentfinder</artifactId>
   <packaging>jar</packaging>
   <version>1.0.0</version>
   <name>assignment1</name>
@@ -33,7 +33,7 @@
                             <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                 <manifestEntries>
                                     <Main-Class>nz.ac.wgtn.swen301.assignment1.cli.FindStudentDetails</Main-Class>
-                                    <Class-Path>${project.basedir}/lib/lib_studentdb-1.1.1.jar</Class-Path>
+                                    <Class-Path>${project.basedir}/lib/studentdb-1.1.1.jar</Class-Path>
                                 </manifestEntries>
                             </transformer>
                         </transformers>
@@ -64,7 +64,7 @@
           <artifactId>studentdb</artifactId>
           <version>1.1.1</version>
           <scope>system</scope>
-          <systemPath>${project.basedir}/lib/lib_studentdb-1.1.1.jar</systemPath>
+          <systemPath>${pom.basedir}/lib/studentdb-1.1.1.jar</systemPath>
       </dependency>
 
   </dependencies>
