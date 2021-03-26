@@ -10,7 +10,7 @@ It is also shown that the StudentManager package depends on the studentdb packag
 In the "Used by Packages" section for StudentManager, it displays that FindStudentDetails uses this.
  
 
-####2. How to generate the standalone CLI application with mvn, and how to use.
+#### 2. How to generate the standalone CLI application with mvn, and how to use.
 
 The code will be compiled using the command in the terminal <code>mvn compile</code> Once the code is compiled,
 the application can be created with <code>mvn package</code>
